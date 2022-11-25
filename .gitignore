@@ -1,2 +1,4 @@
 /doorbell
 *.dat
+*.json
+*.pyc
