@@ -5,11 +5,14 @@ import numpy as np
 import platform
 import pickle
 
+import fire
+
 
 # Our list of known face encodings and a matching list of metadata about each face.
 known_face_encodings = []
 known_face_metadata = []
 mode = ''
+database_today = []
 
 def save_known_faces():
     with open("known_faces.dat", "wb") as face_data_file:
@@ -81,13 +84,25 @@ def register_new_face(face_encoding, face_image):
     print("Saved new student")
     exit()
 
+def register_attendance(student_name):
+
+    Time_now = datetime.now()
+    if student_name not in database_today:
+        database_today.append(student_name)
+        fire.posts_ref.push().set({
+            'Student_Name': student_name,
+            'Time': Time_now
+        })
+        print("Attendance registered")
+        print(f"Name: {student_name} Time: {Time_now}")
+    else:
+        pass
+        #print("Attendance is already registered")
+
 
 def main_loop():
 
     video_capture = cv2.VideoCapture(0)
-
-    # Track how long since we last saved a copy of our known faces to disk as a backup.
-    number_of_faces_since_save = 0
 
     while True:
         # Grab a single frame of video
@@ -117,6 +132,8 @@ def main_loop():
             if metadata is not None:
                 face_label = metadata['name']
 
+                register_attendance(face_label)
+
             # # If this is a brand new face, add it to our list of known faces
             else:
                 face_label = "Student not registered!"
@@ -127,7 +144,7 @@ def main_loop():
                 face_image = cv2.resize(face_image, (150, 150))
 
                 # Add the new face to our known face data
-                if mode == '2':
+                if mode == '2': # Register new student
                     register_new_face(face_encoding, face_image)
 
             face_labels.append(face_label)
