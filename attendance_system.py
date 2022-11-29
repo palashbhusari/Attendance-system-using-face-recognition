@@ -12,6 +12,7 @@ import fire
 known_face_encodings = []
 known_face_metadata = []
 mode = ''
+status = ''
 database_today = []
 
 def save_known_faces():
@@ -86,7 +87,7 @@ def register_new_face(face_encoding, face_image):
 
 def register_attendance(student_name):
 
-    Time_now = datetime.now()
+    Time_now = (str(datetime.now())[0:19])
     if student_name not in database_today:
         database_today.append(student_name)
         fire.posts_ref.push().set({
@@ -95,11 +96,7 @@ def register_attendance(student_name):
         })
         print("Attendance registered")
         print(f"Name: {student_name} Time: {Time_now}")
-    else:
-        pass
-        #print("Attendance is already registered")
-
-
+   
 def main_loop():
 
     video_capture = cv2.VideoCapture(0)
@@ -121,6 +118,7 @@ def main_loop():
         # Loop through each detected face and see if it is one we have seen before
         # If so, we'll give it a label that we'll draw on top of the video.
         face_labels = []
+        status = ''
         for face_location, face_encoding in zip(face_locations, face_encodings):
             # See if this face is in our list of known faces.
             metadata = lookup_known_face(face_encoding)
@@ -131,13 +129,16 @@ def main_loop():
             # If we found the face, label the face with some useful information.
             if metadata is not None:
                 face_label = metadata['name']
-
                 register_attendance(face_label)
+                face_label = face_label
+                box_color = (0,255,0)
+                status = "Status: Attendance Registered"
 
             # # If this is a brand new face, add it to our list of known faces
             else:
                 face_label = "Student not registered!"
-
+                box_color = (0,0,255)
+                status = "Attendance application active"
                 # Grab the image of the the face from the current frame of video
                 top, right, bottom, left = face_location
                 face_image = small_frame[top:bottom, left:right]
@@ -158,11 +159,14 @@ def main_loop():
             left *= 4
 
             # Draw a box around the face
-            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+            cv2.rectangle(frame, (left, top), (right, bottom), box_color, 2)
 
             # Draw a label with a name below the face
-            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), box_color, cv2.FILLED)
             cv2.putText(frame, face_label, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8, (255, 255, 255), 1)
+
+        # Show status on top right corner
+        cv2.putText(frame, status, (50, 50), cv2.FONT_HERSHEY_DUPLEX, 1.2, (0,255,0), 1)
 
         # Display the final frame of video with boxes drawn around each detected fames
         cv2.imshow('Video', frame)
