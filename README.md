@@ -12,7 +12,7 @@ Libraries in the requirement file
 credentials.Certificate to connect the firebase
 
 
-##  QUick Start
+##  Quick Start
 
 Edit the required information in the fire.py script
  - path to "serviceAccountKey.json"
